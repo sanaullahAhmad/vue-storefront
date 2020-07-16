@@ -3,15 +3,21 @@
 import { createContext, createPayment } from './payment';
 import { ref, onMounted } from '@vue/composition-api';
 import { getPublicKey, getStyles, getCardTokenKey } from './configuration';
+import { CKO_PAYMENT_TYPE, buildPaymentPayloadStrategies, PaymentPropetiesWithOptionalToken } from './helpers';
 
 declare const Frames: any;
 
 const submitDisabled = ref(false);
 const error = ref(null);
+const paymentMethod = ref(0);
 
 const getCardToken = () => localStorage.getItem(getCardTokenKey());
 const setCardToken = (token) => localStorage.setItem(getCardTokenKey(), token);
 const removeCardToken = () => localStorage.removeItem(getCardTokenKey());
+
+const setCurrentPaymentMethod = (newPaymentMethod: CKO_PAYMENT_TYPE) => paymentMethod.value = newPaymentMethod;
+const getCurrentPaymentMethod = () => paymentMethod.value;
+const getCurrentPaymentMethodPayload = (payload: PaymentPropetiesWithOptionalToken) => buildPaymentPayloadStrategies[getCurrentPaymentMethod()](payload);
 
 const useCkoCard = () => {
   const makePayment = async ({ cartId }) => {
@@ -24,15 +30,16 @@ const useCkoCard = () => {
       }
 
       const context = await createContext({ reference: cartId });
-      const payment = await createPayment({
-        type: 'token',
-        token,
-        context_id: context.data.id,
-        save_payment_instrument: true,
-        secure3d: true,
-        success_url: `${window.location.origin}/cko/payment-success`,
-        failure_url: `${window.location.origin}/cko/payment-error`
-      });
+      const payment = await createPayment(
+        getCurrentPaymentMethodPayload({
+          token,
+          context_id: context.data.id,
+          save_payment_instrument: true,
+          secure3d: true,
+          success_url: `${window.location.origin}/cko/payment-success`,
+          failure_url: `${window.location.origin}/cko/payment-error`
+        })
+      );
 
       removeCardToken();
       if (![200, 202].includes(payment.status)) {
@@ -58,6 +65,7 @@ const useCkoCard = () => {
         submitDisabled.value = !Frames.isCardValid();
       },
       cardTokenized: async ({ token }) => {
+        setCurrentPaymentMethod(CKO_PAYMENT_TYPE.CREDIT_CARD);
         setCardToken(token);
       },
       cardTokenizationFailed: (data) => {
@@ -69,10 +77,12 @@ const useCkoCard = () => {
 
   return {
     error,
-    submitForm,
     submitDisabled,
+    submitForm,
     makePayment,
-    initForm
+    initForm,
+    setCurrentPaymentMethod,
+    getCurrentPaymentMethod
   };
 };
 export default useCkoCard;
