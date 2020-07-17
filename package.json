@@ -45,7 +45,7 @@
     "dev:ct": "cd packages/commercetools/theme && yarn dev",
     "link-packages": "lerna link --force-local",
     "lint": "eslint . --ext .js,.ts,.vue",
-    "depa": "ts-node ./scripts/release/index.ts"
+    "release": "cd scripts && yarn release"
   },
   "devDependencies": {
     "@types/jest": "^24.0.23",
