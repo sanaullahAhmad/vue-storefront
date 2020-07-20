@@ -178,6 +178,7 @@
               <div class="sf-radio__label">
                 {{ `**** **** **** ${item.last4}` }}
               </div>
+              <div @click="removeMinePaymentInstrument(item.payment_instrument_id)">X</div>
             </template>
           </SfRadio>
       </div>
@@ -269,7 +270,8 @@ export default {
       paymentMethod,
       setTransactionToken,
       setSavePaymentInstrument,
-      savePaymentInstrument
+      savePaymentInstrument,
+      removePaymentInstrument
     } = useCkoCard();
     const { cart } = useCart();
     const { isAuthenticated } = useUser();
@@ -306,6 +308,9 @@ export default {
       setBillingDetails(oldBilling);
     };
 
+    const removeMinePaymentInstrument = async (paymentInstrument) => removePaymentInstrument(cart.value.customerId, paymentInstrument);
+    // Unset option if just removed selected card!
+
     const setPaymentInstrument = (item) => {
       setCurrentPaymentMethod(CKO_PAYMENT_TYPE.SAVED_CARD);
       setTransactionToken(item.payment_instrument_id);
@@ -330,7 +335,8 @@ export default {
       setSavePaymentInstrument,
       savePaymentInstrument,
       paymentMethod,
-      CKO_PAYMENT_TYPE
+      CKO_PAYMENT_TYPE,
+      removeMinePaymentInstrument
     };
   }
 };

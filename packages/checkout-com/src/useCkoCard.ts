@@ -1,6 +1,6 @@
 /* eslint-disable camelcase, @typescript-eslint/camelcase */
 
-import { createContext, createPayment, getCustomerCards } from './payment';
+import { createContext, createPayment, getCustomerCards, removeSavedCard } from './payment';
 import { ref, onMounted, computed } from '@vue/composition-api';
 import { getPublicKey, getStyles, getTransactionTokenKey, getSaveInstrumentKey } from './configuration';
 import { CKO_PAYMENT_TYPE, buildPaymentPayloadStrategies, PaymentPropetiesWithOptionalToken } from './helpers';
@@ -103,6 +103,16 @@ const useCkoCard = () => {
     }
   };
 
+  const removePaymentInstrument = async (customerId: string, paymentInstrument: string) => {
+    try {
+      const response = await removeSavedCard({ customer_id: customerId, payment_instrument_id: paymentInstrument });
+      storedPaymentInstruments.value = storedPaymentInstruments.value.filter(instrument => instrument.payment_instrument_id !== paymentInstrument);
+      console.log(response);
+    } catch (e) {
+      error.value = e;
+    }
+  };
+  removeSavedCard;
   return {
     error,
     submitDisabled,
@@ -115,7 +125,8 @@ const useCkoCard = () => {
     setTransactionToken,
     storedPaymentInstruments,
     setSavePaymentInstrument,
-    savePaymentInstrument
+    savePaymentInstrument,
+    removePaymentInstrument
   };
 };
 export default useCkoCard;
