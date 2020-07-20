@@ -131,7 +131,7 @@
           :selected="chosenPaymentMethod.value"
           :label="item.label"
           :value="item.value"
-          @input="setPaymentMethod(item, { save: true })"
+          @input="setPaymentMethod(item, { save: true }); setCurrentPaymentMethod(CKO_PAYMENT_TYPE.CREDIT_CARD)"
           name="paymentMethod"
           :description="item.description"
           class="form__radio payment-method"
@@ -153,16 +153,16 @@
       </button> -->
     </form>
 
-    <div>
+    <div v-if="isAuthenticated && storedPaymentInstruments.length">
       <h3>Stored payment instruments</h3>
     <div class="form__element payment-methods">
         <SfRadio
           v-for="item in storedPaymentInstruments"
           :key="item.payment_instrument_id"
-          :selected="chosenPaymentMethod.value"
+          :selected="chosenPaymentMethod.payment_instrument_id"
           :label="`**** ${item.last4} - ${item.product_type}`"
           :value="item.payment_instrument_id"
-          @input="setPaymentMethod(item, { save: true })"
+          @input="setPaymentInstrument(item)"
           name="savedPaymentInstrument"
           :description="item.product_type"
           class="form__radio payment-method"
@@ -204,6 +204,7 @@ import { ValidationProvider, ValidationObserver, extend } from 'vee-validate';
 import { required, min } from 'vee-validate/dist/rules';
 import { onSSR } from '@vue-storefront/core';
 import { useCkoCard } from '@vue-storefront/checkout-com';
+import { CKO_PAYMENT_TYPE } from '@vue-storefront/checkout-com/src/helpers';
 
 const COUNTRIES = [
   { key: 'US',
@@ -251,7 +252,16 @@ export default {
       loadDetails,
       loading
     } = useCheckout();
-    const { submitForm, submitDisabled, initForm, loadStoredPaymentInstruments, storedPaymentInstruments } = useCkoCard();
+    const {
+      submitForm,
+      submitDisabled,
+      initForm,
+      loadStoredPaymentInstruments,
+      storedPaymentInstruments,
+      setCurrentPaymentMethod,
+      getCurrentPaymentMethod,
+      setTransactionToken
+    } = useCkoCard();
     const { cart } = useCart();
     const { isAuthenticated } = useUser();
     const sameAsShipping = ref(false);
@@ -260,7 +270,7 @@ export default {
     onSSR(async () => {
       await loadDetails();
       await loadPaymentMethods();
-      if (isAuthenticated.value) {
+      if (isAuthenticated.value && cart.value && cart.value.customerId) {
         await loadStoredPaymentInstruments(cart.value.customerId);
       }
     });
@@ -269,7 +279,9 @@ export default {
 
     const handleFormSubmit = async () => {
       await setBillingDetails(billingDetails.value, { save: true });
-      await submitForm();
+      if (getCurrentPaymentMethod() === CKO_PAYMENT_TYPE.CREDIT_CARD) {
+        await submitForm();
+      }
       context.root.$router.push('/checkout/order-review');
     };
 
@@ -285,6 +297,12 @@ export default {
       setBillingDetails(oldBilling);
     };
 
+    const setPaymentInstrument = (item) => {
+      setCurrentPaymentMethod(CKO_PAYMENT_TYPE.SAVED_CARD);
+      setTransactionToken(item.payment_instrument_id);
+      setPaymentMethod(item, { save: true });
+    };
+
     return {
       submitDisabled,
       loading,
@@ -297,7 +315,9 @@ export default {
       setPaymentMethod,
       handleFormSubmit,
       handleCheckSameAddress,
-      storedPaymentInstruments
+      storedPaymentInstruments,
+      setPaymentInstrument,
+      isAuthenticated
     };
   }
 };
