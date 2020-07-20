@@ -153,14 +153,14 @@
       </button> -->
     </form>
 
-    <div v-if="isAuthenticated && storedPaymentInstruments.length">
+    <div v-if="storedPaymentInstruments.length" style="width: 100%;">
       <h3>Stored payment instruments</h3>
     <div class="form__element payment-methods">
         <SfRadio
           v-for="item in storedPaymentInstruments"
           :key="item.payment_instrument_id"
           :selected="chosenPaymentMethod.payment_instrument_id"
-          :label="`**** ${item.last4} - ${item.product_type}`"
+          :label="`**** **** **** ${item.last4}`"
           :value="item.payment_instrument_id"
           @input="setPaymentInstrument(item)"
           name="savedPaymentInstrument"
@@ -169,7 +169,7 @@
         >
           <template #label>
             <div class="sf-radio__label">
-              {{ `**** ${item.last4} - ${item.product_type}` }}
+              {{ `**** **** **** ${item.last4}` }}
             </div>
           </template>
         </SfRadio>
@@ -259,7 +259,7 @@ export default {
       loadStoredPaymentInstruments,
       storedPaymentInstruments,
       setCurrentPaymentMethod,
-      getCurrentPaymentMethod,
+      paymentMethod,
       setTransactionToken
     } = useCkoCard();
     const { cart } = useCart();
@@ -279,7 +279,7 @@ export default {
 
     const handleFormSubmit = async () => {
       await setBillingDetails(billingDetails.value, { save: true });
-      if (getCurrentPaymentMethod() === CKO_PAYMENT_TYPE.CREDIT_CARD) {
+      if (paymentMethod.value === CKO_PAYMENT_TYPE.CREDIT_CARD) {
         await submitForm();
       }
       context.root.$router.push('/checkout/order-review');
@@ -317,7 +317,9 @@ export default {
       handleCheckSameAddress,
       storedPaymentInstruments,
       setPaymentInstrument,
-      isAuthenticated
+      setCurrentPaymentMethod,
+      paymentMethod,
+      CKO_PAYMENT_TYPE
     };
   }
 };

@@ -1,16 +1,22 @@
 /* eslint-disable camelcase, @typescript-eslint/camelcase */
 
 import { createContext, createPayment, getCustomerCards } from './payment';
-import { ref, onMounted } from '@vue/composition-api';
+import { ref, onMounted, computed } from '@vue/composition-api';
 import { getPublicKey, getStyles, getTransactionTokenKey } from './configuration';
 import { CKO_PAYMENT_TYPE, buildPaymentPayloadStrategies, PaymentPropetiesWithOptionalToken } from './helpers';
 
 declare const Frames: any;
 
-const submitDisabled = ref(false);
+const isCardValid = ref(false);
 const error = ref(null);
 const paymentMethod = ref(0);
 const storedPaymentInstruments = ref([]);
+const submitDisabled = computed(() => {
+  if (paymentMethod.value === CKO_PAYMENT_TYPE.SAVED_CARD) {
+    return false;
+  }
+  return !isCardValid.value;
+});
 
 const getTransactionToken = () => localStorage.getItem(getTransactionTokenKey());
 const setTransactionToken = (token) => localStorage.setItem(getTransactionTokenKey(), token);
@@ -18,12 +24,8 @@ const removeTransactionToken = () => localStorage.removeItem(getTransactionToken
 
 const setCurrentPaymentMethod = (newPaymentMethod: CKO_PAYMENT_TYPE) => {
   paymentMethod.value = newPaymentMethod;
-  if (newPaymentMethod === CKO_PAYMENT_TYPE.SAVED_CARD) {
-    submitDisabled.value = false;
-  }
 };
-const getCurrentPaymentMethod = () => paymentMethod.value;
-const getCurrentPaymentMethodPayload = (payload: PaymentPropetiesWithOptionalToken) => buildPaymentPayloadStrategies[getCurrentPaymentMethod()](payload);
+const getCurrentPaymentMethodPayload = (payload: PaymentPropetiesWithOptionalToken) => buildPaymentPayloadStrategies[paymentMethod.value](payload);
 
 const useCkoCard = () => {
   const makePayment = async ({ cartId, email }) => {
@@ -63,12 +65,12 @@ const useCkoCard = () => {
   const submitForm = async () => Frames.submitCard();
 
   const initForm = () => {
-    submitDisabled.value = true;
+    isCardValid.value = false;
     onMounted(() => Frames.init({
       publicKey: getPublicKey(),
       style: getStyles(),
       cardValidationChanged: () => {
-        submitDisabled.value = !Frames.isCardValid();
+        isCardValid.value = Frames.isCardValid();
       },
       cardTokenized: async ({ token }) => {
         setCurrentPaymentMethod(CKO_PAYMENT_TYPE.CREDIT_CARD);
@@ -76,7 +78,7 @@ const useCkoCard = () => {
       },
       cardTokenizationFailed: (data) => {
         error.value = data;
-        submitDisabled.value = false;
+        isCardValid.value = false;
       }
     }));
   };
@@ -97,7 +99,7 @@ const useCkoCard = () => {
     makePayment,
     initForm,
     setCurrentPaymentMethod,
-    getCurrentPaymentMethod,
+    paymentMethod,
     loadStoredPaymentInstruments,
     setTransactionToken,
     storedPaymentInstruments
