@@ -288,7 +288,7 @@ export default {
 
     const handleFormSubmit = async () => {
       await setBillingDetails(billingDetails.value, { save: true });
-      if (paymentMethod.value === CKO_PAYMENT_TYPE.CREDIT_CARD) {
+      if (paymentMethod.value !== CKO_PAYMENT_TYPE.SAVED_CARD) {
         await submitForm();
       }
       context.root.$router.push('/checkout/order-review');
