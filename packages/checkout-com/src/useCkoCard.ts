@@ -1,8 +1,8 @@
 /* eslint-disable camelcase, @typescript-eslint/camelcase */
 
-import { createContext, createPayment } from './payment';
+import { createContext, createPayment, getCustomerCards } from './payment';
 import { ref, onMounted } from '@vue/composition-api';
-import { getPublicKey, getStyles, getCardTokenKey } from './configuration';
+import { getPublicKey, getStyles, getTransactionTokenKey } from './configuration';
 import { CKO_PAYMENT_TYPE, buildPaymentPayloadStrategies, PaymentPropetiesWithOptionalToken } from './helpers';
 
 declare const Frames: any;
@@ -10,10 +10,11 @@ declare const Frames: any;
 const submitDisabled = ref(false);
 const error = ref(null);
 const paymentMethod = ref(0);
+const storedPaymentInstruments = ref([]);
 
-const getCardToken = () => localStorage.getItem(getCardTokenKey());
-const setCardToken = (token) => localStorage.setItem(getCardTokenKey(), token);
-const removeCardToken = () => localStorage.removeItem(getCardTokenKey());
+const getTransactionToken = () => localStorage.getItem(getTransactionTokenKey());
+const setTransactionToken = (token) => localStorage.setItem(getTransactionTokenKey(), token);
+const removeTransactionToken = () => localStorage.removeItem(getTransactionTokenKey());
 
 const setCurrentPaymentMethod = (newPaymentMethod: CKO_PAYMENT_TYPE) => paymentMethod.value = newPaymentMethod;
 const getCurrentPaymentMethod = () => paymentMethod.value;
@@ -23,7 +24,7 @@ const useCkoCard = () => {
   const makePayment = async ({ cartId, email }) => {
     try {
 
-      const token = getCardToken();
+      const token = getTransactionToken();
 
       if (!token) {
         throw new Error('There is no payment token');
@@ -41,14 +42,14 @@ const useCkoCard = () => {
         })
       );
 
-      removeCardToken();
+      removeTransactionToken();
       if (![200, 202].includes(payment.status)) {
         throw new Error(payment.data.error_type);
       }
 
       return payment;
     } catch (e) {
-      removeCardToken();
+      removeTransactionToken();
       error.value = e;
       return null;
     }
@@ -66,13 +67,23 @@ const useCkoCard = () => {
       },
       cardTokenized: async ({ token }) => {
         setCurrentPaymentMethod(CKO_PAYMENT_TYPE.CREDIT_CARD);
-        setCardToken(token);
+        setTransactionToken(token);
       },
       cardTokenizationFailed: (data) => {
         error.value = data;
         submitDisabled.value = false;
       }
     }));
+  };
+
+  const loadStoredPaymentInstruments = async (customerId: string) => {
+    try {
+      const { data } = await getCustomerCards({ customer_id: customerId });
+      storedPaymentInstruments.value = data.payment_instruments;
+      console.log(storedPaymentInstruments);
+    } catch (e) {
+      error.value = e;
+    }
   };
 
   return {
@@ -82,7 +93,9 @@ const useCkoCard = () => {
     makePayment,
     initForm,
     setCurrentPaymentMethod,
-    getCurrentPaymentMethod
+    getCurrentPaymentMethod,
+    loadStoredPaymentInstruments,
+    storedPaymentInstruments
   };
 };
 export default useCkoCard;

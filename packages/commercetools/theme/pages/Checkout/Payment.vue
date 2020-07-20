@@ -153,6 +153,29 @@
       </button> -->
     </form>
 
+    <div>
+      <h3>Stored payment instruments</h3>
+    <div class="form__element payment-methods">
+        <SfRadio
+          v-for="item in storedPaymentInstruments"
+          :key="item.payment_instrument_id"
+          :selected="chosenPaymentMethod.value"
+          :label="`**** ${item.last4} - ${item.product_type}`"
+          :value="item.payment_instrument_id"
+          @input="setPaymentMethod(item, { save: true })"
+          name="savedPaymentInstrument"
+          :description="item.product_type"
+          class="form__radio payment-method"
+        >
+          <template #label>
+            <div class="sf-radio__label">
+              {{ `**** ${item.last4} - ${item.product_type}` }}
+            </div>
+          </template>
+        </SfRadio>
+    </div>
+    </div>
+
       <div class="form__action">
         <nuxt-link to="/checkout/shipping" class="sf-button color-secondary form__back-button">Go back</nuxt-link>
         <SfButton class="form__action-button" type="submit" :disabled="loading.billingAddress || submitDisabled">
@@ -176,7 +199,7 @@ import {
   SfCheckbox
 } from '@storefront-ui/vue';
 import { ref } from '@vue/composition-api';
-import { useCheckout } from '@vue-storefront/commercetools';
+import { useCheckout, useCart, useUser } from '@vue-storefront/commercetools';
 import { ValidationProvider, ValidationObserver, extend } from 'vee-validate';
 import { required, min } from 'vee-validate/dist/rules';
 import { onSSR } from '@vue-storefront/core';
@@ -228,13 +251,18 @@ export default {
       loadDetails,
       loading
     } = useCheckout();
-    const { submitForm, submitDisabled, initForm } = useCkoCard();
+    const { submitForm, submitDisabled, initForm, loadStoredPaymentInstruments, storedPaymentInstruments } = useCkoCard();
+    const { cart } = useCart();
+    const { isAuthenticated } = useUser();
     const sameAsShipping = ref(false);
     let oldBilling = null;
 
     onSSR(async () => {
       await loadDetails();
       await loadPaymentMethods();
+      if (isAuthenticated.value) {
+        await loadStoredPaymentInstruments(cart.value.customerId);
+      }
     });
 
     initForm();
@@ -268,7 +296,8 @@ export default {
       setBillingDetails,
       setPaymentMethod,
       handleFormSubmit,
-      handleCheckSameAddress
+      handleCheckSameAddress,
+      storedPaymentInstruments
     };
   }
 };

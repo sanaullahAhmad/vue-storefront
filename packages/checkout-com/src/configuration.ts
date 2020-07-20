@@ -43,6 +43,6 @@ const getPublicKey = () => config.publicKey;
 const getCkoWebhookUrl = () => config.ckoWebHookUrl;
 const getCkoProxyUrl = () => `${window.location.origin}/cko-api`;
 const getStyles = () => config.styles;
-const getCardTokenKey = () => config.tokenizedCardKey;
+const getTransactionTokenKey = () => config.tokenizedCardKey;
 
-export { setup, getPublicKey, getCkoWebhookUrl, getStyles, getCardTokenKey, getCkoProxyUrl };
+export { setup, getPublicKey, getCkoWebhookUrl, getStyles, getTransactionTokenKey, getCkoProxyUrl };
