@@ -215,7 +215,7 @@ export default {
 
     const handleSubmit = async () => {
       isPaymentProcessing.value = true;
-      const payment = await makePayment({ cartId: cart.value.id, email: user.value.email });
+      const payment = await makePayment({ cartId: cart.value.id, email: user.value && user.value.email });
 
       if (!payment) return;
 
