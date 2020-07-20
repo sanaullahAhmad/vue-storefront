@@ -20,7 +20,7 @@ const getCurrentPaymentMethod = () => paymentMethod.value;
 const getCurrentPaymentMethodPayload = (payload: PaymentPropetiesWithOptionalToken) => buildPaymentPayloadStrategies[getCurrentPaymentMethod()](payload);
 
 const useCkoCard = () => {
-  const makePayment = async ({ cartId }) => {
+  const makePayment = async ({ cartId, email }) => {
     try {
 
       const token = getCardToken();
@@ -29,7 +29,7 @@ const useCkoCard = () => {
         throw new Error('There is no payment token');
       }
 
-      const context = await createContext({ reference: cartId });
+      const context = await createContext({ reference: cartId, email });
       const payment = await createPayment(
         getCurrentPaymentMethodPayload({
           token,

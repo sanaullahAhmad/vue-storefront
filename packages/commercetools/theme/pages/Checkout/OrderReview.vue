@@ -169,7 +169,7 @@ import {
   SfAccordion
 } from '@storefront-ui/vue';
 import { ref, computed } from '@vue/composition-api';
-import { useCheckout, useCart, cartGetters, checkoutGetters } from '@vue-storefront/commercetools';
+import { useUser, useCheckout, useCart, cartGetters, checkoutGetters } from '@vue-storefront/commercetools';
 import { onSSR } from '@vue-storefront/core';
 import { useCkoCard } from '@vue-storefront/checkout-com';
 
@@ -206,6 +206,7 @@ export default {
       loadDetails
     } = useCheckout();
     const { makePayment, submitDisabled, error: paymentError } = useCkoCard();
+    const { user } = useUser();
 
     onSSR(async () => {
       await loadDetails();
@@ -214,7 +215,7 @@ export default {
 
     const handleSubmit = async () => {
       isPaymentProcessing.value = true;
-      const payment = await makePayment({ cartId: cart.value.id });
+      const payment = await makePayment({ cartId: cart.value.id, email: user.value.email });
 
       if (!payment) return;
 
