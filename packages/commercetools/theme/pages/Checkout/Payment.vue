@@ -152,28 +152,35 @@
         PAY GBP 24.99
       </button> -->
     </form>
+    <SfCheckbox
+      :selected="savePaymentInstrument"
+      @change="setSavePaymentInstrument(!savePaymentInstrument)"
+      label="Save payment instrument"
+      name="savePaymentInstrument"
+      class="form__element"
+    />
 
     <div v-if="storedPaymentInstruments.length" style="width: 100%;">
       <h3>Stored payment instruments</h3>
-    <div class="form__element payment-methods">
-        <SfRadio
-          v-for="item in storedPaymentInstruments"
-          :key="item.payment_instrument_id"
-          :selected="chosenPaymentMethod.payment_instrument_id"
-          :label="`**** **** **** ${item.last4}`"
-          :value="item.payment_instrument_id"
-          @input="setPaymentInstrument(item)"
-          name="savedPaymentInstrument"
-          :description="item.product_type"
-          class="form__radio payment-method"
-        >
-          <template #label>
-            <div class="sf-radio__label">
-              {{ `**** **** **** ${item.last4}` }}
-            </div>
-          </template>
-        </SfRadio>
-    </div>
+      <div class="form__element payment-methods">
+          <SfRadio
+            v-for="item in storedPaymentInstruments"
+            :key="item.payment_instrument_id"
+            :selected="chosenPaymentMethod.payment_instrument_id"
+            :label="`**** **** **** ${item.last4}`"
+            :value="item.payment_instrument_id"
+            @input="setPaymentInstrument(item)"
+            name="savedPaymentInstrument"
+            :description="item.product_type"
+            class="form__radio payment-method"
+          >
+            <template #label>
+              <div class="sf-radio__label">
+                {{ `**** **** **** ${item.last4}` }}
+              </div>
+            </template>
+          </SfRadio>
+      </div>
     </div>
 
       <div class="form__action">
@@ -260,7 +267,9 @@ export default {
       storedPaymentInstruments,
       setCurrentPaymentMethod,
       paymentMethod,
-      setTransactionToken
+      setTransactionToken,
+      setSavePaymentInstrument,
+      savePaymentInstrument
     } = useCkoCard();
     const { cart } = useCart();
     const { isAuthenticated } = useUser();
@@ -318,6 +327,8 @@ export default {
       storedPaymentInstruments,
       setPaymentInstrument,
       setCurrentPaymentMethod,
+      setSavePaymentInstrument,
+      savePaymentInstrument,
       paymentMethod,
       CKO_PAYMENT_TYPE
     };
