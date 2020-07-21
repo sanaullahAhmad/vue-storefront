@@ -165,10 +165,10 @@
       <div class="form__element payment-methods">
           <SfRadio
             v-for="item in storedPaymentInstruments"
-            :key="item.payment_instrument_id"
-            :selected="chosenPaymentMethod.payment_instrument_id"
+            :key="item.id"
+            :selected="chosenPaymentMethod.id"
             :label="`**** **** **** ${item.last4}`"
-            :value="item.payment_instrument_id"
+            :value="item.id"
             @input="setPaymentInstrument(item)"
             name="savedPaymentInstrument"
             :description="item.product_type"
@@ -313,7 +313,7 @@ export default {
 
     const setPaymentInstrument = (item) => {
       setCurrentPaymentMethod(CKO_PAYMENT_TYPE.SAVED_CARD);
-      setTransactionToken(item.payment_instrument_id);
+      setTransactionToken(item.id);
       setPaymentMethod(item, { save: true });
     };
 
