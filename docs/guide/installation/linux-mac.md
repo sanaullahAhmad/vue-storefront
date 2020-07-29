@@ -88,6 +88,20 @@ After you answered all the questions, the installation process will start (it mi
 └────────────────────────────────────────────────────────────────┘
 ```
 
+Yoy may incounter an error,
+'Can't start Docker in background.'
+if this happen, than 
+To resolve this error edit the line 197 in path
+
+vue-storefront/core/scripts/installer.js
+
+if (shell.exec(`docker-compose up -d > /dev/null 2>&1`).code !== 0) {
+
+change condition to "sudo docker -composer up -d"
+
+if (shell.exec(`sudo docker -composer up -d`).code !== 0) {
+By doing so, docker will successfully install in background.
+
 Your project should contain 2 folders at this moment: `vue-storefront` and `vue-storefront-api`. Vue Storefront should be running on `http://localhost:3000`:
 
 ![Storefront screenshot](../images/storefront.png)
